@@ -1,6 +1,6 @@
 module github.com/Ryuzaki5100/learnharness-tui
 
-go 1.27.3
+go 1.26
 
 require (
 	github.com/charmbracelet/bubbles v1.0.0
