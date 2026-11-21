@@ -1,0 +1,7 @@
+/.devenv/
+/.direnv/
+/result
+/dist/
+/lhtui
+*.log
+.DS_Store
