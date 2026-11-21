@@ -1,6 +1,7 @@
 package domain
 
 import (
+	"os"
 	"path/filepath"
 	"runtime"
 	"strings"
@@ -29,6 +30,7 @@ func TestResolveDataDirPrecedence(t *testing.T) {
 
 func TestResolveDataDirDefault(t *testing.T) {
 	t.Setenv("LH_DATA_DIR", "")
+	t.Setenv("HOME", t.TempDir())
 	got, err := ResolveDataDir("")
 	if err != nil {
 		t.Fatalf("resolve default: %v", err)
@@ -38,5 +40,22 @@ func TestResolveDataDirDefault(t *testing.T) {
 	}
 	if runtime.GOOS == "darwin" && !strings.Contains(got, filepath.Join("Library", "Application Support")) {
 		t.Fatalf("macOS default must use Application Support: %q", got)
+	}
+}
+
+func TestResolveDataDirFallsBackToSyncedCheckout(t *testing.T) {
+	home := t.TempDir()
+	t.Setenv("HOME", home)
+	t.Setenv("LH_DATA_DIR", "")
+	synced := filepath.Join(home, "learning", "learnharness-data")
+	if err := os.MkdirAll(synced, 0o755); err != nil {
+		t.Fatalf("mkdir: %v", err)
+	}
+	got, err := ResolveDataDir("")
+	if err != nil {
+		t.Fatalf("resolve: %v", err)
+	}
+	if got != synced {
+		t.Fatalf("got %q, want the synced checkout %q", got, synced)
 	}
 }

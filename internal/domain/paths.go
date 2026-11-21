@@ -23,19 +23,31 @@ func ResolveDataDir(override string) (string, error) {
 	if err != nil {
 		return "", fmt.Errorf("resolve home directory: %w", err)
 	}
+	defaultDir := platformDefault(home)
+	// The dotfiles deployment keeps the record in a synced checkout. A shell
+	// without LH_DATA_DIR (tmux, cron, a GUI launcher) should still find it
+	// rather than pointing at an empty OS-default directory.
+	synced := filepath.Join(home, "learning", "learnharness-data")
+	if !DataDirExists(defaultDir) && DataDirExists(synced) {
+		return synced, nil
+	}
+	return defaultDir, nil
+}
+
+func platformDefault(home string) string {
 	switch runtime.GOOS {
 	case "darwin":
-		return filepath.Join(home, "Library", "Application Support", "LearnHarness", "data"), nil
+		return filepath.Join(home, "Library", "Application Support", "LearnHarness", "data")
 	case "windows":
 		if appData := os.Getenv("APPDATA"); appData != "" {
-			return filepath.Join(appData, "LearnHarness", "data"), nil
+			return filepath.Join(appData, "LearnHarness", "data")
 		}
-		return filepath.Join(home, "AppData", "Roaming", "LearnHarness", "data"), nil
+		return filepath.Join(home, "AppData", "Roaming", "LearnHarness", "data")
 	default:
 		if xdg := os.Getenv("XDG_CONFIG_HOME"); xdg != "" {
-			return filepath.Join(xdg, "LearnHarness", "data"), nil
+			return filepath.Join(xdg, "LearnHarness", "data")
 		}
-		return filepath.Join(home, ".config", "LearnHarness", "data"), nil
+		return filepath.Join(home, ".config", "LearnHarness", "data")
 	}
 }
 
